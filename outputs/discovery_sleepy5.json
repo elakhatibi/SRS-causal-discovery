@@ -1,0 +1,248 @@
+{
+  "outcome": "sleepy5",
+  "outcome_node": "num__OUTCOME",
+  "direct": [
+    "cat__race1c_2.0",
+    "num__DesaturationIndex",
+    "num__MeanHR_bpm",
+    "num__MeanRR_ms",
+    "num__MeanSpO2",
+    "num__MinSpO2",
+    "num__WASO_min",
+    "num__bmi5c",
+    "num__extrahrs5"
+  ],
+  "indirect": [
+    "cat__gender1_1.0",
+    "cat__race1c_3.0",
+    "cat__race1c_4.0",
+    "cat__smkstat5_1.0",
+    "cat__smkstat5_3.0",
+    "cat__types5_2.0",
+    "cat__types5_3.0",
+    "cat__types5_4.0",
+    "cat__types5_5.0",
+    "cat__wrksched5_5.0",
+    "cat__wrksched5_7.0",
+    "num__AHI",
+    "num__ArousalIndex",
+    "num__AwakeningIndex",
+    "num__HypopneaIndex",
+    "num__N1_pct",
+    "num__N2_pct",
+    "num__N3_pct",
+    "num__ObstructiveApneaIndex",
+    "num__REM_pct",
+    "num__RMSSD_ms",
+    "num__SDNN_ms",
+    "num__SOL_min",
+    "num__SWA_Decline_Ratio",
+    "num__SWA_Early",
+    "num__SWA_Late",
+    "num__SWA_NREM",
+    "num__Sigma_NREM",
+    "num__SleepEfficiency_pct",
+    "num__StageShiftIndex",
+    "num__T90_pct",
+    "num__TST_min",
+    "num__sleepage5c"
+  ],
+  "top_incoming": [
+    [
+      "num__bmi5c",
+      0.04701909896987732
+    ],
+    [
+      "num__MeanRR_ms",
+      -0.0411265994683066
+    ],
+    [
+      "cat__race1c_2.0",
+      -0.03656396555753486
+    ],
+    [
+      "num__extrahrs5",
+      0.02879483607701522
+    ],
+    [
+      "num__DesaturationIndex",
+      0.0282102943163446
+    ],
+    [
+      "num__WASO_min",
+      0.02313629523776206
+    ],
+    [
+      "num__MeanHR_bpm",
+      0.015164672865419369
+    ],
+    [
+      "num__MeanSpO2",
+      0.011518052879820813
+    ],
+    [
+      "num__MinSpO2",
+      -0.010737239407448867
+    ],
+    [
+      "num__pNN50_pct",
+      0.009479759595253025
+    ],
+    [
+      "num__SWA_Decline_Ratio",
+      -0.007011385177096115
+    ],
+    [
+      "num__AwakeningIndex",
+      0.000508897943816255
+    ],
+    [
+      "num__TST_min",
+      9.059848841724804e-05
+    ],
+    [
+      "num__SDNN_ms",
+      8.486942497740119e-05
+    ],
+    [
+      "num__ArousalIndex",
+      -6.259679549204474e-05
+    ],
+    [
+      "cat__wrksched5_2.0",
+      1.5673424421940864e-05
+    ],
+    [
+      "num__SOL_min",
+      1.562208038101934e-05
+    ],
+    [
+      "cat__wrksched5_4.0",
+      9.26579559528061e-06
+    ],
+    [
+      "num__AHI",
+      8.74245220007334e-06
+    ],
+    [
+      "num__SWA_NREM",
+      -8.619166839420688e-06
+    ]
+  ],
+  "extras": {
+    "args": {
+      "csv": "Dataset/mesa_SRS_master.csv",
+      "outcome": "sleepy5",
+      "algo": "all",
+      "ci_test": "fisherz",
+      "alpha": 0.05,
+      "lambda1": 0.02,
+      "thr": 0.01,
+      "topk": 20,
+      "max_rows": 0,
+      "max_depth": 2,
+      "ges_score": "bic",
+      "ges_timeout_sec": 60,
+      "fci_mode": "possible",
+      "export_json": "outputs/discovery_sleepy5.json"
+    },
+    "notears": {
+      "thr": 0.01,
+      "lambda1": 0.02,
+      "top_incoming": [
+        [
+          "num__bmi5c",
+          0.04701909896987732
+        ],
+        [
+          "num__MeanRR_ms",
+          -0.0411265994683066
+        ],
+        [
+          "cat__race1c_2.0",
+          -0.03656396555753486
+        ],
+        [
+          "num__extrahrs5",
+          0.02879483607701522
+        ],
+        [
+          "num__DesaturationIndex",
+          0.0282102943163446
+        ],
+        [
+          "num__WASO_min",
+          0.02313629523776206
+        ],
+        [
+          "num__MeanHR_bpm",
+          0.015164672865419369
+        ],
+        [
+          "num__MeanSpO2",
+          0.011518052879820813
+        ],
+        [
+          "num__MinSpO2",
+          -0.010737239407448867
+        ],
+        [
+          "num__pNN50_pct",
+          0.009479759595253025
+        ],
+        [
+          "num__SWA_Decline_Ratio",
+          -0.007011385177096115
+        ],
+        [
+          "num__AwakeningIndex",
+          0.000508897943816255
+        ],
+        [
+          "num__TST_min",
+          9.059848841724804e-05
+        ],
+        [
+          "num__SDNN_ms",
+          8.486942497740119e-05
+        ],
+        [
+          "num__ArousalIndex",
+          -6.259679549204474e-05
+        ],
+        [
+          "cat__wrksched5_2.0",
+          1.5673424421940864e-05
+        ],
+        [
+          "num__SOL_min",
+          1.562208038101934e-05
+        ],
+        [
+          "cat__wrksched5_4.0",
+          9.26579559528061e-06
+        ],
+        [
+          "num__AHI",
+          8.74245220007334e-06
+        ],
+        [
+          "num__SWA_NREM",
+          -8.619166839420688e-06
+        ]
+      ]
+    },
+    "pc": {
+      "strict_parents": [],
+      "possible_parents": []
+    },
+    "fci": {
+      "mode": "possible",
+      "parents": []
+    },
+    "ges": {
+      "status": "timeout",
+      "score": "local_score_BIC"
+    }
+  }
+}

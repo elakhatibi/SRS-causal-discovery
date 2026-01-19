@@ -1,0 +1,247 @@
+{
+  "outcome": "epslpscl5c",
+  "outcome_node": "num__OUTCOME",
+  "direct": [
+    "cat__race1c_2.0",
+    "cat__race1c_3.0",
+    "num__DesaturationIndex",
+    "num__ObstructiveApneaIndex",
+    "num__SOL_min",
+    "num__T90_pct",
+    "num__bmi5c",
+    "num__extrahrs5",
+    "num__sleepage5c"
+  ],
+  "indirect": [
+    "cat__gender1_1.0",
+    "cat__race1c_4.0",
+    "cat__smkstat5_1.0",
+    "cat__smkstat5_3.0",
+    "cat__types5_2.0",
+    "cat__types5_3.0",
+    "cat__types5_4.0",
+    "cat__types5_5.0",
+    "cat__wrksched5_5.0",
+    "cat__wrksched5_7.0",
+    "num__AHI",
+    "num__ArousalIndex",
+    "num__AwakeningIndex",
+    "num__HypopneaIndex",
+    "num__MeanHR_bpm",
+    "num__MeanRR_ms",
+    "num__MeanSpO2",
+    "num__N1_pct",
+    "num__N2_pct",
+    "num__N3_pct",
+    "num__REM_pct",
+    "num__RMSSD_ms",
+    "num__SDNN_ms",
+    "num__SWA_Decline_Ratio",
+    "num__SWA_Early",
+    "num__SWA_Late",
+    "num__SWA_NREM",
+    "num__Sigma_NREM",
+    "num__SleepEfficiency_pct",
+    "num__StageShiftIndex",
+    "num__TST_min",
+    "num__WASO_min"
+  ],
+  "top_incoming": [
+    [
+      "cat__race1c_3.0",
+      0.1336755651715089
+    ],
+    [
+      "cat__race1c_2.0",
+      -0.0712396855173726
+    ],
+    [
+      "num__DesaturationIndex",
+      0.07099185172241816
+    ],
+    [
+      "num__sleepage5c",
+      -0.07040655921060567
+    ],
+    [
+      "num__SOL_min",
+      -0.05160415123078176
+    ],
+    [
+      "num__extrahrs5",
+      0.04411978721297613
+    ],
+    [
+      "num__bmi5c",
+      0.029858356253694224
+    ],
+    [
+      "num__T90_pct",
+      0.019625690046374784
+    ],
+    [
+      "num__ObstructiveApneaIndex",
+      0.016691048235394426
+    ],
+    [
+      "num__REM_pct",
+      0.009486759256113217
+    ],
+    [
+      "num__WASO_min",
+      0.008889951216486202
+    ],
+    [
+      "cat__wrksched5_7.0",
+      -0.0043107404701364805
+    ],
+    [
+      "num__SWA_Early",
+      0.004018743322378499
+    ],
+    [
+      "num__SDNN_ms",
+      0.0035718426734262336
+    ],
+    [
+      "num__StageShiftIndex",
+      0.000722698092379182
+    ],
+    [
+      "cat__wrksched5_6.0",
+      -5.027184877771054e-05
+    ],
+    [
+      "num__PLMI",
+      3.9202262617110365e-05
+    ],
+    [
+      "num__N3_pct",
+      -1.2707732318300261e-05
+    ],
+    [
+      "cat__wrksched5_3.0",
+      8.703868016793001e-06
+    ],
+    [
+      "num__SleepEfficiency_pct",
+      -6.817630718720754e-06
+    ]
+  ],
+  "extras": {
+    "args": {
+      "csv": "Dataset/mesa_SRS_master.csv",
+      "outcome": "epslpscl5c",
+      "algo": "all",
+      "ci_test": "fisherz",
+      "alpha": 0.05,
+      "lambda1": 0.02,
+      "thr": 0.01,
+      "topk": 20,
+      "max_rows": 0,
+      "max_depth": 2,
+      "ges_score": "bic",
+      "ges_timeout_sec": 60,
+      "fci_mode": "possible",
+      "export_json": "outputs/discovery_epss.json"
+    },
+    "notears": {
+      "thr": 0.01,
+      "lambda1": 0.02,
+      "top_incoming": [
+        [
+          "cat__race1c_3.0",
+          0.1336755651715089
+        ],
+        [
+          "cat__race1c_2.0",
+          -0.0712396855173726
+        ],
+        [
+          "num__DesaturationIndex",
+          0.07099185172241816
+        ],
+        [
+          "num__sleepage5c",
+          -0.07040655921060567
+        ],
+        [
+          "num__SOL_min",
+          -0.05160415123078176
+        ],
+        [
+          "num__extrahrs5",
+          0.04411978721297613
+        ],
+        [
+          "num__bmi5c",
+          0.029858356253694224
+        ],
+        [
+          "num__T90_pct",
+          0.019625690046374784
+        ],
+        [
+          "num__ObstructiveApneaIndex",
+          0.016691048235394426
+        ],
+        [
+          "num__REM_pct",
+          0.009486759256113217
+        ],
+        [
+          "num__WASO_min",
+          0.008889951216486202
+        ],
+        [
+          "cat__wrksched5_7.0",
+          -0.0043107404701364805
+        ],
+        [
+          "num__SWA_Early",
+          0.004018743322378499
+        ],
+        [
+          "num__SDNN_ms",
+          0.0035718426734262336
+        ],
+        [
+          "num__StageShiftIndex",
+          0.000722698092379182
+        ],
+        [
+          "cat__wrksched5_6.0",
+          -5.027184877771054e-05
+        ],
+        [
+          "num__PLMI",
+          3.9202262617110365e-05
+        ],
+        [
+          "num__N3_pct",
+          -1.2707732318300261e-05
+        ],
+        [
+          "cat__wrksched5_3.0",
+          8.703868016793001e-06
+        ],
+        [
+          "num__SleepEfficiency_pct",
+          -6.817630718720754e-06
+        ]
+      ]
+    },
+    "pc": {
+      "strict_parents": [],
+      "possible_parents": []
+    },
+    "fci": {
+      "mode": "possible",
+      "parents": []
+    },
+    "ges": {
+      "status": "timeout",
+      "score": "local_score_BIC"
+    }
+  }
+}

@@ -1,0 +1,612 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import argparse
+import multiprocessing as mp
+from dataclasses import dataclass
+from typing import List, Tuple, Optional, Dict
+
+import numpy as np
+import pandas as pd
+import networkx as nx
+
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.impute import SimpleImputer
+from sklearn.feature_selection import mutual_info_regression
+
+from notears_linear import notears_linear
+
+
+# --------------------------
+# Column groups (PSG/physio + confounders)
+# --------------------------
+
+PSG_PHYSIO_COLS = [
+    "TST_min", "SleepEfficiency_pct", "SOL_min", "WASO_min",
+    "StageShiftIndex", "AwakeningIndex",
+    "N1_pct", "N2_pct", "N3_pct", "REM_pct",
+    "HypopneaIndex", "ObstructiveApneaIndex", "AHI",
+    "DesaturationIndex", "ODI",
+    "MeanSpO2", "MinSpO2", "T90_pct",
+    "ArousalIndex", "PLMI",
+    "SWA_NREM", "Sigma_NREM", "SWA_Early", "SWA_Late", "SWA_Decline_Ratio",
+    "MeanHR_bpm", "MeanRR_ms", "SDNN_ms", "RMSSD_ms", "pNN50_pct",
+]
+
+CORE_CONFOUNDERS = [
+    "sleepage5c", "race1c", "gender1", "bmi5c", "smkstat5",
+    "wrksched5", "extrahrs5", "types5", "examnumber",
+]
+
+ID_COLS = ["subject_id"]
+
+
+# --------------------------
+# Data selection / cleaning
+# --------------------------
+
+def select_psg_only_frame(df: pd.DataFrame, outcome: str) -> pd.DataFrame:
+    df = df.copy()
+    if outcome not in df.columns:
+        raise ValueError(f"Outcome '{outcome}' not found in dataset columns.")
+    df["OUTCOME"] = df[outcome]
+
+    for c in ID_COLS:
+        if c in df.columns:
+            df = df.drop(columns=[c])
+
+    df = df.loc[~df["OUTCOME"].isna()].reset_index(drop=True)
+
+    keep = {"OUTCOME"}
+    keep.update([c for c in PSG_PHYSIO_COLS if c in df.columns])
+    keep.update([c for c in CORE_CONFOUNDERS if c in df.columns])
+
+    df = df[[c for c in df.columns if c in keep]].copy()
+    return df
+
+
+def drop_constant_and_duplicate_columns(df: pd.DataFrame, min_unique: int = 2) -> pd.DataFrame:
+    df = df.copy()
+    protected = {"OUTCOME"}
+
+    to_drop = []
+    for c in df.columns:
+        if c in protected:
+            continue
+        if df[c].nunique(dropna=True) < min_unique:
+            to_drop.append(c)
+
+    if to_drop:
+        df = df.drop(columns=to_drop)
+
+    dup_mask = df.T.duplicated()
+    if "OUTCOME" in df.columns:
+        dup_mask.iloc[df.columns.get_loc("OUTCOME")] = False
+    df = df.loc[:, ~dup_mask]
+    return df
+
+
+# --------------------------
+# Preprocessing
+# --------------------------
+
+def build_preprocessor(df: pd.DataFrame, categorical: List[str]) -> ColumnTransformer:
+    categorical = [c for c in categorical if c in df.columns and c != "OUTCOME"]
+    numeric = [c for c in df.columns if c not in categorical]
+
+    num_pipe = Pipeline(steps=[
+        ("imputer", SimpleImputer(strategy="median")),
+        ("scaler", StandardScaler()),
+    ])
+
+    cat_pipe = Pipeline(steps=[
+        ("imputer", SimpleImputer(strategy="most_frequent")),
+        # drop="first" reduces multicollinearity
+        ("onehot", OneHotEncoder(handle_unknown="ignore", sparse_output=False, drop="first")),
+    ])
+
+    return ColumnTransformer(
+        transformers=[
+            ("num", num_pipe, numeric),
+            ("cat", cat_pipe, categorical),
+        ],
+        remainder="drop",
+        verbose_feature_names_out=True,
+    )
+
+
+def fit_transform(df: pd.DataFrame, categorical: List[str]) -> Tuple[np.ndarray, List[str]]:
+    pre = build_preprocessor(df, categorical)
+    X = pre.fit_transform(df)
+    names = list(pre.get_feature_names_out())
+    return np.asarray(X, dtype=float), names
+
+
+def find_outcome_feature_name(names: List[str]) -> str:
+    if "OUTCOME" in names:
+        return "OUTCOME"
+    c = [n for n in names if n.endswith("__OUTCOME")]
+    if c:
+        return c[0]
+    c = [n for n in names if "OUTCOME" in n]
+    if c:
+        return c[0]
+    raise RuntimeError("OUTCOME not found after preprocessing.")
+
+
+# --------------------------
+# Screening (to make PC/FCI work)
+# --------------------------
+
+def screen_features(
+    X: np.ndarray,
+    names: List[str],
+    outcome_node: str,
+    method: str = "corr",
+    topk: int = 30,
+    random_state: int = 7,
+) -> Tuple[np.ndarray, List[str]]:
+    """
+    Reduce dimensionality for constraint-based methods (PC/FCI/GES).
+    This is the key step that makes PC/FCI stop returning empty in practice.
+
+    method:
+      - corr: rank by |corr(feature, outcome)|
+      - mi: rank by mutual information(feature, outcome)
+
+    Always keeps OUTCOME, returns a screened X and names.
+    """
+    if outcome_node not in names:
+        raise ValueError("Outcome node not in names")
+
+    j = names.index(outcome_node)
+    y = X[:, j].copy()
+
+    # Exclude outcome itself from ranking
+    idx = [i for i in range(X.shape[1]) if i != j]
+    X_feat = X[:, idx]
+    feat_names = [names[i] for i in idx]
+
+    if method == "corr":
+        # Pearson correlation
+        corrs = []
+        for i in range(X_feat.shape[1]):
+            x = X_feat[:, i]
+            # avoid NaNs
+            if np.std(x) < 1e-12 or np.std(y) < 1e-12:
+                corrs.append(0.0)
+            else:
+                corrs.append(float(np.corrcoef(x, y)[0, 1]))
+        scores = np.abs(np.array(corrs))
+
+    elif method == "mi":
+        # Mutual information (handles nonlinearity better)
+        rng = np.random.RandomState(random_state)
+        scores = mutual_info_regression(X_feat, y, random_state=rng)
+        scores = np.asarray(scores, dtype=float)
+    else:
+        raise ValueError("screen_method must be 'corr' or 'mi'")
+
+    # Top-k features
+    k = min(topk, len(scores))
+    top_idx = np.argsort(scores)[::-1][:k]
+
+    keep_names = [feat_names[i] for i in top_idx]
+    keep_cols = [idx[i] for i in top_idx]
+
+    # Always include OUTCOME
+    keep_cols = keep_cols + [j]
+    keep_names = keep_names + [outcome_node]
+
+    # Deduplicate while preserving order
+    seen = set()
+    final_cols = []
+    final_names = []
+    for c, n in zip(keep_cols, keep_names):
+        if n in seen:
+            continue
+        seen.add(n)
+        final_cols.append(c)
+        final_names.append(n)
+
+    Xs = X[:, final_cols]
+    return Xs, final_names
+
+
+# --------------------------
+# Graph helpers
+# --------------------------
+
+def parents_of(G: nx.DiGraph, node: str) -> List[str]:
+    return sorted(list(G.predecessors(node))) if node in G else []
+
+
+def ancestors_of(G: nx.DiGraph, node: str) -> List[str]:
+    return sorted(list(nx.ancestors(G, node))) if node in G else []
+
+
+def summarize_causes(G: nx.DiGraph, outcome_node: str) -> Tuple[List[str], List[str]]:
+    direct = parents_of(G, outcome_node)
+    indirect = sorted(list(set(ancestors_of(G, outcome_node)) - set(direct) - {outcome_node}))
+    return direct, indirect
+
+
+def threshold_W_to_digraph(W: np.ndarray, names: List[str], thr: float) -> nx.DiGraph:
+    G = nx.DiGraph()
+    for n in names:
+        G.add_node(n)
+    for i, src in enumerate(names):
+        for j, dst in enumerate(names):
+            if i == j:
+                continue
+            w = W[i, j]
+            if abs(w) >= thr:
+                G.add_edge(src, dst, weight=float(w))
+    return G
+
+
+def topk_incoming(W: np.ndarray, names: List[str], target: str, k: int = 20) -> List[Tuple[str, float]]:
+    if target not in names:
+        return []
+    j = names.index(target)
+    arr = []
+    for i, src in enumerate(names):
+        if i == j:
+            continue
+        w = float(W[i, j])
+        if np.isnan(w) or np.isinf(w):
+            continue
+        arr.append((src, w))
+    arr.sort(key=lambda t: abs(t[1]), reverse=True)
+    return arr[:k]
+
+
+def _map_node_name_to_feature(node_name: str, feat_names: List[str]) -> Optional[str]:
+    s = str(node_name)
+    if s in feat_names:
+        return s
+    if s.isdigit():
+        idx = int(s)
+        if 0 <= idx < len(feat_names):
+            return feat_names[idx]
+    return None
+
+
+def graph_neighbors_from_causal_learn(graph_obj, feat_names: List[str], target: str) -> List[str]:
+    """
+    Return neighbors (skeleton adjacency) of target from a causal-learn graph.
+    This ensures you ALWAYS get something if the outcome is connected at all,
+    even when no orientations are available.
+    """
+    if target not in feat_names:
+        return []
+    t = feat_names.index(target)
+    neigh = set()
+
+    # Many causal-learn graphs expose an adjacency matrix at .graph
+    mat = getattr(graph_obj, "graph", None)
+    if isinstance(mat, np.ndarray) and mat.ndim == 2:
+        for j in range(mat.shape[1]):
+            if j == t:
+                continue
+            if mat[t, j] != 0 or mat[j, t] != 0:
+                neigh.add(feat_names[j])
+        return sorted(list(neigh))
+
+    # Fallback: use edges
+    try:
+        edges = graph_obj.get_graph_edges()
+        for e in edges:
+            n1 = _map_node_name_to_feature(e.get_node1().get_name(), feat_names)
+            n2 = _map_node_name_to_feature(e.get_node2().get_name(), feat_names)
+            if n1 is None or n2 is None:
+                continue
+            if n1 == target:
+                neigh.add(n2)
+            elif n2 == target:
+                neigh.add(n1)
+    except Exception:
+        pass
+
+    return sorted(list(neigh))
+
+
+# --------------------------
+# Algorithms
+# --------------------------
+
+def run_notears(X: np.ndarray, lambda1: float) -> np.ndarray:
+    return notears_linear(X, lambda1=lambda1, w_threshold=0.0)
+
+
+def run_pc(X: np.ndarray, alpha: float, ci_test: str, max_depth: int) -> object:
+    from causallearn.search.ConstraintBased.PC import pc
+    if ci_test == "fisherz":
+        from causallearn.utils.cit import fisherz as indep
+    elif ci_test == "kci":
+        from causallearn.utils.cit import kci as indep
+    else:
+        raise ValueError("ci_test must be fisherz or kci")
+
+    cg = pc(
+        X, alpha=alpha, indep_test=indep,
+        stable=True, uc_rule=0, uc_priority=2,
+        verbose=False, depth=max_depth
+    )
+    return cg.G
+
+
+def extract_pc_strict_parents(cpdag, feat_names: List[str], outcome_node: str) -> List[str]:
+    """
+    strict parents: oriented into outcome (TAIL->ARROW)
+    """
+    parents = set()
+    try:
+        edges = cpdag.get_graph_edges()
+        for e in edges:
+            n1 = _map_node_name_to_feature(e.get_node1().get_name(), feat_names)
+            n2 = _map_node_name_to_feature(e.get_node2().get_name(), feat_names)
+            if n1 is None or n2 is None:
+                continue
+            ep1 = str(e.get_endpoint1())
+            ep2 = str(e.get_endpoint2())
+
+            if n2 == outcome_node and ep1 == "TAIL" and ep2 == "ARROW":
+                parents.add(n1)
+            if n1 == outcome_node and ep2 == "TAIL" and ep1 == "ARROW":
+                parents.add(n2)
+    except Exception:
+        pass
+    return sorted(list(parents))
+
+
+def run_fci(X: np.ndarray, alpha: float, ci_test: str, max_depth: int) -> object:
+    from causallearn.search.ConstraintBased.FCI import fci
+    if ci_test == "fisherz":
+        from causallearn.utils.cit import fisherz as indep
+    elif ci_test == "kci":
+        from causallearn.utils.cit import kci as indep
+    else:
+        raise ValueError("ci_test must be fisherz or kci")
+
+    pag, _ = fci(X, indep, alpha=alpha, verbose=False, depth=max_depth)
+    return pag
+
+
+def extract_fci_parents_by_mode(pag, feat_names: List[str], outcome_node: str, mode: str) -> List[str]:
+    """
+    mode:
+      - strict: only TAIL->ARROW into outcome
+      - possible: any arrowhead into outcome
+    """
+    parents = set()
+    try:
+        edges = pag.get_graph_edges()
+        for e in edges:
+            n1 = _map_node_name_to_feature(e.get_node1().get_name(), feat_names)
+            n2 = _map_node_name_to_feature(e.get_node2().get_name(), feat_names)
+            if n1 is None or n2 is None:
+                continue
+
+            ep1 = str(e.get_endpoint1())
+            ep2 = str(e.get_endpoint2())
+
+            if n2 == outcome_node:
+                if mode == "strict":
+                    if ep1 == "TAIL" and ep2 == "ARROW":
+                        parents.add(n1)
+                else:
+                    if ep2 == "ARROW":
+                        parents.add(n1)
+
+            if n1 == outcome_node:
+                if mode == "strict":
+                    if ep2 == "TAIL" and ep1 == "ARROW":
+                        parents.add(n2)
+                else:
+                    if ep1 == "ARROW":
+                        parents.add(n2)
+    except Exception:
+        pass
+    return sorted(list(parents))
+
+
+# ------------------ GES with hard timeout ------------------
+
+def _ges_worker(X: np.ndarray, score_name: str, q: mp.Queue):
+    try:
+        from causallearn.search.ScoreBased.GES import ges
+        rec = ges(X, score_func=score_name)
+        q.put(("ok", rec["G"]))
+    except Exception as e:
+        q.put(("err", str(e)))
+
+
+def run_ges_with_timeout(X: np.ndarray, score_name: str, timeout_sec: int):
+    q: mp.Queue = mp.Queue()
+    p = mp.Process(target=_ges_worker, args=(X, score_name, q))
+    p.start()
+    p.join(timeout=timeout_sec)
+    if p.is_alive():
+        p.terminate()
+        p.join()
+        return ("timeout", None)
+    if not q.empty():
+        return q.get()
+    return ("err", "GES returned no result")
+
+
+def extract_directed_graph(graph_obj, feat_names: List[str]) -> nx.DiGraph:
+    G = nx.DiGraph()
+    for n in feat_names:
+        G.add_node(n)
+    try:
+        edges = graph_obj.get_graph_edges()
+        for e in edges:
+            n1 = _map_node_name_to_feature(e.get_node1().get_name(), feat_names)
+            n2 = _map_node_name_to_feature(e.get_node2().get_name(), feat_names)
+            if n1 is None or n2 is None:
+                continue
+            ep1 = str(e.get_endpoint1())
+            ep2 = str(e.get_endpoint2())
+            if ep1 == "TAIL" and ep2 == "ARROW":
+                G.add_edge(n1, n2)
+            elif ep2 == "TAIL" and ep1 == "ARROW":
+                G.add_edge(n2, n1)
+    except Exception:
+        pass
+    return G
+
+
+# --------------------------
+# Main
+# --------------------------
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--csv", required=True)
+    ap.add_argument("--outcome", required=True)
+    ap.add_argument("--algo", default="all", choices=["notears", "pc", "fci", "ges", "all"])
+
+    ap.add_argument("--ci_test", default="fisherz", choices=["fisherz", "kci"])
+    ap.add_argument("--alpha", type=float, default=0.05,
+                    help="PC/FCI CI threshold. Try 0.05 or 0.1 if PC/FCI are empty.")
+    ap.add_argument("--max_depth", type=int, default=2)
+
+    ap.add_argument("--lambda1", type=float, default=0.02)
+    ap.add_argument("--thr", type=float, default=0.01)
+    ap.add_argument("--topk", type=int, default=20)
+
+    ap.add_argument("--max_rows", type=int, default=0)
+
+    ap.add_argument("--ges_score", default="bic", choices=["bic", "bdeu"])
+    ap.add_argument("--ges_timeout_sec", type=int, default=60)
+
+    ap.add_argument("--fci_mode", default="possible", choices=["strict", "possible"])
+
+    # NEW: screening for constraint-based methods
+    ap.add_argument("--screen_k", type=int, default=30,
+                    help="Top-K features kept for PC/FCI/GES screening (excl outcome).")
+    ap.add_argument("--screen_method", default="corr", choices=["corr", "mi"],
+                    help="Feature screening method for PC/FCI/GES.")
+    ap.add_argument("--no_screen", type=int, default=0,
+                    help="1 disables screening (not recommended if PC/FCI are empty).")
+
+    # NEW: run alpha grid for PC/FCI and show union
+    ap.add_argument("--alpha_grid", default="",
+                    help="Comma-separated alphas for PC/FCI, e.g. '0.01,0.05,0.1'. If set, overrides --alpha.")
+    args = ap.parse_args()
+
+    df_raw = pd.read_csv(args.csv)
+    df = select_psg_only_frame(df_raw, outcome=args.outcome)
+    df = drop_constant_and_duplicate_columns(df)
+
+    if args.max_rows and args.max_rows > 0:
+        df = df.iloc[:args.max_rows].copy()
+
+    categorical = [c for c in ["race1c", "gender1", "smkstat5", "wrksched5", "types5", "examnumber"] if c in df.columns]
+    X, names = fit_transform(df, categorical=categorical)
+    outcome_node = find_outcome_feature_name(names)
+
+    # Parse alpha grid
+    if args.alpha_grid.strip():
+        alphas = [float(x.strip()) for x in args.alpha_grid.split(",") if x.strip()]
+    else:
+        alphas = [float(args.alpha)]
+
+    # NOTEARS (run on full feature set)
+    if args.algo in ("notears", "all"):
+        W = run_notears(X, lambda1=args.lambda1)
+        incoming = topk_incoming(W, names, outcome_node, k=args.topk)
+        G_thr = threshold_W_to_digraph(W, names, thr=args.thr)
+        direct, indirect = summarize_causes(G_thr, outcome_node)
+
+        print("\n" + "=" * 90)
+        print(f"NOTEARS outcome={args.outcome} (outcome_node={outcome_node})")
+        print(f"Top-{args.topk} incoming edges into OUTCOME (src -> OUTCOME, weight):")
+        for src, w in incoming:
+            print(f"  {src} -> {outcome_node}   w={w:.4f}")
+        print(f"\nThresholded graph (thr={args.thr}) parents of OUTCOME:\n{direct}")
+        print(f"\nThresholded graph (thr={args.thr}) indirect ancestors of OUTCOME:\n{indirect}")
+
+    # Prepare screened data for PC/FCI/GES
+    if args.no_screen == 1:
+        Xs, names_s = X, names
+    else:
+        Xs, names_s = screen_features(X, names, outcome_node,
+                                      method=args.screen_method, topk=args.screen_k)
+    outcome_node_s = find_outcome_feature_name(names_s)
+
+    # PC (run alpha grid; union results)
+    if args.algo in ("pc", "all"):
+        union_strict = set()
+        union_neighbors = set()
+
+        for a in alphas:
+            cpdag = run_pc(Xs, alpha=a, ci_test=args.ci_test, max_depth=args.max_depth)
+            strict = extract_pc_strict_parents(cpdag, names_s, outcome_node_s)
+            neigh = graph_neighbors_from_causal_learn(cpdag, names_s, outcome_node_s)
+            union_strict.update(strict)
+            union_neighbors.update(neigh)
+
+            print("\n" + "=" * 90)
+            print(f"PC (screened) outcome={args.outcome} alpha={a} ci_test={args.ci_test} max_depth={args.max_depth}")
+            print("Strict parents of OUTCOME (oriented):")
+            print(strict)
+            print("Neighbors of OUTCOME (skeleton adjacency):")
+            print(neigh)
+
+        print("\n" + "=" * 90)
+        print("PC summary (union over alpha grid):")
+        print("Union strict parents:", sorted(list(union_strict)))
+        print("Union neighbors:", sorted(list(union_neighbors)))
+
+    # FCI (run alpha grid; union results)
+    if args.algo in ("fci", "all"):
+        union_parents = set()
+        union_neighbors = set()
+
+        for a in alphas:
+            pag = run_fci(Xs, alpha=a, ci_test=args.ci_test, max_depth=args.max_depth)
+            parents = extract_fci_parents_by_mode(pag, names_s, outcome_node_s, mode=args.fci_mode)
+            neigh = graph_neighbors_from_causal_learn(pag, names_s, outcome_node_s)
+            union_parents.update(parents)
+            union_neighbors.update(neigh)
+
+            print("\n" + "=" * 90)
+            print(f"FCI (screened) outcome={args.outcome} alpha={a} ci_test={args.ci_test} max_depth={args.max_depth} mode={args.fci_mode}")
+            print("Parents of OUTCOME (FCI):")
+            print(parents)
+            print("Neighbors of OUTCOME (PAG adjacency):")
+            print(neigh)
+
+        print("\n" + "=" * 90)
+        print("FCI summary (union over alpha grid):")
+        print("Union parents:", sorted(list(union_parents)))
+        print("Union neighbors:", sorted(list(union_neighbors)))
+
+    # GES (screened; more likely to finish)
+    if args.algo in ("ges", "all"):
+        score_name = "local_score_BIC" if args.ges_score == "bic" else "local_score_BDeu"
+        print("\n" + "=" * 90)
+        print(f"GES (screened) starting (score={score_name}) with timeout={args.ges_timeout_sec}s...")
+
+        status, payload = run_ges_with_timeout(Xs, score_name=score_name, timeout_sec=args.ges_timeout_sec)
+        if status == "timeout":
+            print("GES timed out and was stopped.")
+        elif status == "err":
+            print(f"GES failed: {payload}")
+        else:
+            G_ges = extract_directed_graph(payload, names_s)
+            direct, indirect = summarize_causes(G_ges, outcome_node_s)
+            print("GES finished.")
+            print("Parents of OUTCOME:")
+            print(direct)
+            print("Ancestors of OUTCOME:")
+            print(indirect)
+
+
+if __name__ == "__main__":
+    main()

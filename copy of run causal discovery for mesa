@@ -1,0 +1,507 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import argparse
+import json
+import multiprocessing as mp
+from pathlib import Path
+from typing import List, Tuple, Optional, Dict, Any
+
+import numpy as np
+import pandas as pd
+import networkx as nx
+
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.impute import SimpleImputer
+
+from notears_linear import notears_linear
+
+
+# --------------------------
+# Column groups (PSG/physio + confounders)
+# --------------------------
+
+PSG_PHYSIO_COLS = [
+    "TST_min", "SleepEfficiency_pct", "SOL_min", "WASO_min",
+    "StageShiftIndex", "AwakeningIndex",
+    "N1_pct", "N2_pct", "N3_pct", "REM_pct",
+    "HypopneaIndex", "ObstructiveApneaIndex", "AHI",
+    "DesaturationIndex", "ODI",
+    "MeanSpO2", "MinSpO2", "T90_pct",
+    "ArousalIndex", "PLMI",
+    "SWA_NREM", "Sigma_NREM", "SWA_Early", "SWA_Late", "SWA_Decline_Ratio",
+    "MeanHR_bpm", "MeanRR_ms", "SDNN_ms", "RMSSD_ms", "pNN50_pct",
+]
+
+CORE_CONFOUNDERS = [
+    "sleepage5c", "race1c", "gender1", "bmi5c", "smkstat5",
+    "wrksched5", "extrahrs5", "types5", "examnumber",
+]
+
+ID_COLS = ["subject_id"]
+
+
+# --------------------------
+# Data selection / cleaning
+# --------------------------
+
+def select_psg_only_frame(df: pd.DataFrame, outcome: str) -> pd.DataFrame:
+    df = df.copy()
+    if outcome not in df.columns:
+        raise ValueError(f"Outcome '{outcome}' not found in dataset columns.")
+    df["OUTCOME"] = df[outcome]
+
+    for c in ID_COLS:
+        if c in df.columns:
+            df = df.drop(columns=[c])
+
+    df = df.loc[~df["OUTCOME"].isna()].reset_index(drop=True)
+
+    keep = {"OUTCOME"}
+    keep.update([c for c in PSG_PHYSIO_COLS if c in df.columns])
+    keep.update([c for c in CORE_CONFOUNDERS if c in df.columns])
+
+    return df[[c for c in df.columns if c in keep]].copy()
+
+
+def drop_constant_and_duplicate_columns(df: pd.DataFrame, min_unique: int = 2) -> pd.DataFrame:
+    df = df.copy()
+    protected = {"OUTCOME"}
+
+    to_drop = []
+    for c in df.columns:
+        if c in protected:
+            continue
+        if df[c].nunique(dropna=True) < min_unique:
+            to_drop.append(c)
+    if to_drop:
+        df = df.drop(columns=to_drop)
+
+    dup_mask = df.T.duplicated()
+    if "OUTCOME" in df.columns:
+        dup_mask.iloc[df.columns.get_loc("OUTCOME")] = False
+    return df.loc[:, ~dup_mask]
+
+
+# --------------------------
+# Preprocessing
+# --------------------------
+
+def build_preprocessor(df: pd.DataFrame, categorical: List[str]) -> ColumnTransformer:
+    categorical = [c for c in categorical if c in df.columns and c != "OUTCOME"]
+    numeric = [c for c in df.columns if c not in categorical]
+
+    num_pipe = Pipeline(steps=[
+        ("imputer", SimpleImputer(strategy="median")),
+        ("scaler", StandardScaler()),
+    ])
+
+    cat_pipe = Pipeline(steps=[
+        ("imputer", SimpleImputer(strategy="most_frequent")),
+        ("onehot", OneHotEncoder(handle_unknown="ignore", sparse_output=False, drop="first")),
+    ])
+
+    return ColumnTransformer(
+        transformers=[
+            ("num", num_pipe, numeric),
+            ("cat", cat_pipe, categorical),
+        ],
+        remainder="drop",
+        verbose_feature_names_out=True,
+    )
+
+
+def fit_transform(df: pd.DataFrame, categorical: List[str]) -> Tuple[np.ndarray, List[str]]:
+    pre = build_preprocessor(df, categorical)
+    X = pre.fit_transform(df)
+    names = list(pre.get_feature_names_out())
+    return np.asarray(X, dtype=float), names
+
+
+def find_outcome_feature_name(names: List[str]) -> str:
+    if "OUTCOME" in names:
+        return "OUTCOME"
+    c = [n for n in names if n.endswith("__OUTCOME")]
+    if c:
+        return c[0]
+    c = [n for n in names if "OUTCOME" in n]
+    if c:
+        return c[0]
+    raise RuntimeError("OUTCOME not found after preprocessing.")
+
+
+# --------------------------
+# Graph helpers
+# --------------------------
+
+def parents_of(G: nx.DiGraph, node: str) -> List[str]:
+    return sorted(list(G.predecessors(node))) if node in G else []
+
+
+def ancestors_of(G: nx.DiGraph, node: str) -> List[str]:
+    return sorted(list(nx.ancestors(G, node))) if node in G else []
+
+
+def summarize_causes(G: nx.DiGraph, outcome_node: str) -> Tuple[List[str], List[str]]:
+    direct = parents_of(G, outcome_node)
+    indirect = sorted(list(set(ancestors_of(G, outcome_node)) - set(direct) - {outcome_node}))
+    return direct, indirect
+
+
+def threshold_W_to_digraph(W: np.ndarray, names: List[str], thr: float) -> nx.DiGraph:
+    G = nx.DiGraph()
+    for n in names:
+        G.add_node(n)
+    for i, src in enumerate(names):
+        for j, dst in enumerate(names):
+            if i == j:
+                continue
+            w = W[i, j]
+            if abs(w) >= thr:
+                G.add_edge(src, dst, weight=float(w))
+    return G
+
+
+def topk_incoming(W: np.ndarray, names: List[str], target: str, k: int = 20) -> List[Tuple[str, float]]:
+    if target not in names:
+        return []
+    j = names.index(target)
+    arr = []
+    for i, src in enumerate(names):
+        if i == j:
+            continue
+        w = float(W[i, j])
+        if np.isnan(w) or np.isinf(w):
+            continue
+        arr.append((src, w))
+    arr.sort(key=lambda t: abs(t[1]), reverse=True)
+    return arr[:k]
+
+
+def _map_node_name_to_feature(node_name: str, feat_names: List[str]) -> Optional[str]:
+    s = str(node_name)
+    if s in feat_names:
+        return s
+    if s.isdigit():
+        idx = int(s)
+        if 0 <= idx < len(feat_names):
+            return feat_names[idx]
+    return None
+
+
+# --------------------------
+# NOTEARS
+# --------------------------
+
+def run_notears(X: np.ndarray, lambda1: float) -> np.ndarray:
+    return notears_linear(X, lambda1=lambda1, w_threshold=0.0)
+
+
+# --------------------------
+# PC
+# --------------------------
+
+def run_pc(X: np.ndarray, alpha: float, ci_test: str, max_depth: int) -> object:
+    from causallearn.search.ConstraintBased.PC import pc
+    if ci_test == "fisherz":
+        from causallearn.utils.cit import fisherz as indep
+    elif ci_test == "kci":
+        from causallearn.utils.cit import kci as indep
+    else:
+        raise ValueError("ci_test must be fisherz or kci")
+
+    cg = pc(
+        X, alpha=alpha, indep_test=indep,
+        stable=True, uc_rule=0, uc_priority=2,
+        verbose=False, depth=max_depth
+    )
+    return cg.G
+
+
+def extract_pc_strict_and_possible(cpdag, feat_names: List[str], outcome_node: str) -> Tuple[List[str], List[str]]:
+    G_strict = nx.DiGraph()
+    for n in feat_names:
+        G_strict.add_node(n)
+
+    possible = set()
+    try:
+        edges = cpdag.get_graph_edges()
+        for e in edges:
+            n1 = _map_node_name_to_feature(e.get_node1().get_name(), feat_names)
+            n2 = _map_node_name_to_feature(e.get_node2().get_name(), feat_names)
+            if n1 is None or n2 is None:
+                continue
+            ep1 = str(e.get_endpoint1())
+            ep2 = str(e.get_endpoint2())
+
+            if ep1 == "TAIL" and ep2 == "ARROW":
+                G_strict.add_edge(n1, n2)
+            elif ep2 == "TAIL" and ep1 == "ARROW":
+                G_strict.add_edge(n2, n1)
+
+            if n1 == outcome_node or n2 == outcome_node:
+                if (ep1 == "TAIL" and ep2 == "TAIL") or (ep1 == "CIRCLE") or (ep2 == "CIRCLE"):
+                    other = n2 if n1 == outcome_node else n1
+                    possible.add(other)
+    except Exception:
+        pass
+
+    strict_parents = parents_of(G_strict, outcome_node)
+    return strict_parents, sorted(list(possible))
+
+
+# --------------------------
+# FCI
+# --------------------------
+
+def run_fci(X: np.ndarray, alpha: float, ci_test: str, max_depth: int) -> object:
+    from causallearn.search.ConstraintBased.FCI import fci
+    if ci_test == "fisherz":
+        from causallearn.utils.cit import fisherz as indep
+    elif ci_test == "kci":
+        from causallearn.utils.cit import kci as indep
+    else:
+        raise ValueError("ci_test must be fisherz or kci")
+
+    pag, _ = fci(X, indep, alpha=alpha, verbose=False, depth=max_depth)
+    return pag
+
+
+def extract_fci_parents_by_mode(pag, feat_names: List[str], outcome_node: str, mode: str = "possible") -> List[str]:
+    parents = set()
+    try:
+        edges = pag.get_graph_edges()
+        for e in edges:
+            n1 = _map_node_name_to_feature(e.get_node1().get_name(), feat_names)
+            n2 = _map_node_name_to_feature(e.get_node2().get_name(), feat_names)
+            if n1 is None or n2 is None:
+                continue
+
+            ep1 = str(e.get_endpoint1())
+            ep2 = str(e.get_endpoint2())
+
+            if n2 == outcome_node:
+                if mode == "strict":
+                    if ep1 == "TAIL" and ep2 == "ARROW":
+                        parents.add(n1)
+                else:
+                    if ep2 == "ARROW":
+                        parents.add(n1)
+
+            if n1 == outcome_node:
+                if mode == "strict":
+                    if ep2 == "TAIL" and ep1 == "ARROW":
+                        parents.add(n2)
+                else:
+                    if ep1 == "ARROW":
+                        parents.add(n2)
+    except Exception:
+        pass
+
+    return sorted(list(parents))
+
+
+# --------------------------
+# GES with hard timeout
+# --------------------------
+
+def _ges_worker(X: np.ndarray, score_name: str, q: mp.Queue):
+    try:
+        from causallearn.search.ScoreBased.GES import ges
+        rec = ges(X, score_func=score_name)
+        q.put(("ok", rec["G"]))
+    except Exception as e:
+        q.put(("err", str(e)))
+
+
+def run_ges_with_timeout(X: np.ndarray, score_name: str, timeout_sec: int):
+    q: mp.Queue = mp.Queue()
+    p = mp.Process(target=_ges_worker, args=(X, score_name, q))
+    p.start()
+    p.join(timeout=timeout_sec)
+    if p.is_alive():
+        p.terminate()
+        p.join()
+        return ("timeout", None)
+    if not q.empty():
+        return q.get()
+    return ("err", "GES returned no result")
+
+
+def extract_directed_graph(graph_obj, feat_names: List[str]) -> nx.DiGraph:
+    G = nx.DiGraph()
+    for n in feat_names:
+        G.add_node(n)
+    try:
+        edges = graph_obj.get_graph_edges()
+        for e in edges:
+            n1 = _map_node_name_to_feature(e.get_node1().get_name(), feat_names)
+            n2 = _map_node_name_to_feature(e.get_node2().get_name(), feat_names)
+            if n1 is None or n2 is None:
+                continue
+            ep1 = str(e.get_endpoint1())
+            ep2 = str(e.get_endpoint2())
+            if ep1 == "TAIL" and ep2 == "ARROW":
+                G.add_edge(n1, n2)
+            elif ep2 == "TAIL" and ep1 == "ARROW":
+                G.add_edge(n2, n1)
+    except Exception:
+        pass
+    return G
+
+
+# --------------------------
+# Export JSON
+# --------------------------
+
+def export_results_json(
+    path: str,
+    outcome: str,
+    outcome_node: str,
+    direct: List[str],
+    indirect: List[str],
+    top_incoming_edges: List[Tuple[str, float]],
+    extras: Dict[str, Any],
+):
+    out = {
+        "outcome": outcome,
+        "outcome_node": outcome_node,
+        "direct": direct,
+        "indirect": indirect,
+        "top_incoming": [[a, float(b)] for a, b in top_incoming_edges],
+        "extras": extras,  # PC/FCI/GES info, args, etc. (validator ignores this safely)
+    }
+    p = Path(path)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    with open(p, "w") as f:
+        json.dump(out, f, indent=2)
+    print(f"\n✅ Exported discovery JSON to: {path}")
+
+
+# --------------------------
+# Main
+# --------------------------
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--csv", required=True)
+    ap.add_argument("--outcome", required=True)
+    ap.add_argument("--algo", default="all", choices=["notears", "pc", "fci", "ges", "all"])
+    ap.add_argument("--ci_test", default="fisherz", choices=["fisherz", "kci"])
+    ap.add_argument("--alpha", type=float, default=0.01)
+    ap.add_argument("--lambda1", type=float, default=0.02)
+    ap.add_argument("--thr", type=float, default=0.01)
+    ap.add_argument("--topk", type=int, default=20)
+    ap.add_argument("--max_rows", type=int, default=0)
+    ap.add_argument("--max_depth", type=int, default=2)
+    ap.add_argument("--ges_score", default="bic", choices=["bic", "bdeu"])
+    ap.add_argument("--ges_timeout_sec", type=int, default=60)
+    ap.add_argument("--fci_mode", default="possible", choices=["strict", "possible"])
+
+    # NEW: export JSON for validate_with_llm.py
+    ap.add_argument("--export_json", default="", help="If set, save results to this JSON file path.")
+
+    args = ap.parse_args()
+
+    df_raw = pd.read_csv(args.csv)
+    df = select_psg_only_frame(df_raw, outcome=args.outcome)
+    df = drop_constant_and_duplicate_columns(df)
+
+    if args.max_rows and args.max_rows > 0:
+        df = df.iloc[:args.max_rows].copy()
+
+    categorical = [c for c in ["race1c", "gender1", "smkstat5", "wrksched5", "types5", "examnumber"] if c in df.columns]
+    X, names = fit_transform(df, categorical=categorical)
+    outcome_node = find_outcome_feature_name(names)
+
+    # We'll export NOTEARS results (direct/indirect/top_incoming) as the main evidence
+    notears_direct: List[str] = []
+    notears_indirect: List[str] = []
+    notears_top_incoming: List[Tuple[str, float]] = []
+
+    extras: Dict[str, Any] = {"args": vars(args)}
+
+    # NOTEARS
+    if args.algo in ("notears", "all"):
+        W = run_notears(X, lambda1=args.lambda1)
+        notears_top_incoming = topk_incoming(W, names, outcome_node, k=args.topk)
+        G_thr = threshold_W_to_digraph(W, names, thr=args.thr)
+        notears_direct, notears_indirect = summarize_causes(G_thr, outcome_node)
+
+        print("\n" + "=" * 90)
+        print(f"NOTEARS outcome={args.outcome} (outcome_node={outcome_node})")
+        print(f"Top-{args.topk} incoming edges into OUTCOME (src -> OUTCOME, weight):")
+        for src, w in notears_top_incoming:
+            print(f"  {src} -> {outcome_node}   w={w:.4f}")
+        print(f"\nThresholded graph (thr={args.thr}) parents of OUTCOME:\n{notears_direct}")
+        print(f"\nThresholded graph (thr={args.thr}) indirect ancestors of OUTCOME:\n{notears_indirect}")
+
+        extras["notears"] = {
+            "thr": args.thr,
+            "lambda1": args.lambda1,
+            "top_incoming": [[a, float(b)] for a, b in notears_top_incoming],
+        }
+
+    # PC
+    if args.algo in ("pc", "all"):
+        cpdag = run_pc(X, alpha=args.alpha, ci_test=args.ci_test, max_depth=args.max_depth)
+        strict_parents, possible_parents = extract_pc_strict_and_possible(cpdag, names, outcome_node)
+        print("\n" + "=" * 90)
+        print(f"PC outcome={args.outcome} (ci_test={args.ci_test}, alpha={args.alpha}, max_depth={args.max_depth})")
+        print("Strict parents of OUTCOME (oriented):")
+        print(strict_parents)
+        print("Possible parents of OUTCOME (undirected neighbors):")
+        print(possible_parents)
+        extras["pc"] = {"strict_parents": strict_parents, "possible_parents": possible_parents}
+
+    # FCI
+    if args.algo in ("fci", "all"):
+        pag = run_fci(X, alpha=args.alpha, ci_test=args.ci_test, max_depth=args.max_depth)
+        fci_parents = extract_fci_parents_by_mode(pag, names, outcome_node, mode=args.fci_mode)
+        print("\n" + "=" * 90)
+        print(f"FCI outcome={args.outcome} (ci_test={args.ci_test}, alpha={args.alpha}, max_depth={args.max_depth}, mode={args.fci_mode})")
+        print("Parents of OUTCOME (FCI):")
+        print(fci_parents)
+        extras["fci"] = {"mode": args.fci_mode, "parents": fci_parents}
+
+    # GES
+    if args.algo in ("ges", "all"):
+        score_name = "local_score_BIC" if args.ges_score == "bic" else "local_score_BDeu"
+        print("\n" + "=" * 90)
+        print(f"GES starting (score={score_name}) with timeout={args.ges_timeout_sec}s...")
+
+        status, payload = run_ges_with_timeout(X, score_name=score_name, timeout_sec=args.ges_timeout_sec)
+        extras["ges"] = {"status": status, "score": score_name}
+        if status == "timeout":
+            print("GES timed out and was stopped.")
+        elif status == "err":
+            print(f"GES failed: {payload}")
+            extras["ges"]["error"] = payload
+        else:
+            G_ges = extract_directed_graph(payload, names)
+            ges_direct, ges_indirect = summarize_causes(G_ges, outcome_node)
+            print("GES finished.")
+            print("Parents of OUTCOME:")
+            print(ges_direct)
+            print("Ancestors of OUTCOME:")
+            print(ges_indirect)
+            extras["ges"]["direct"] = ges_direct
+            extras["ges"]["indirect"] = ges_indirect
+
+    # Export JSON for validate_with_llm.py (expects outcome/direct/indirect/top_incoming)
+    if args.export_json:
+        export_results_json(
+            path=args.export_json,
+            outcome=args.outcome,
+            outcome_node=outcome_node,
+            direct=notears_direct,
+            indirect=notears_indirect,
+            top_incoming_edges=notears_top_incoming,
+            extras=extras,
+        )
+
+
+if __name__ == "__main__":
+    main()

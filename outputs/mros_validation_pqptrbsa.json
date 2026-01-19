@@ -1,0 +1,391 @@
+{
+  "outcome": "pqptrbsa",
+  "n_candidates": 42,
+  "candidates": [
+    "cat__tudramt_1",
+    "num__hrv_sdnn_ms",
+    "num__hypopnea_index",
+    "num__num_apnea_hypopnea_events",
+    "num__num_desats",
+    "num__pct_n1",
+    "num__pct_rem",
+    "num__powers_c3_sigma",
+    "num__powers_c4_beta",
+    "num__powers_c4_delta",
+    "num__sleep_latency_min",
+    "num__stage_transition_count",
+    "num__pct_wake",
+    "cat__tudramt_2",
+    "num__sleep_efficiency",
+    "num__tib_min",
+    "num__spo2_t90_frac",
+    "num__spo2_mean",
+    "num__hrv_rmssd_ms",
+    "cat__gieduc_4",
+    "cat__gieduc_3",
+    "cat__gieduc_5",
+    "cat__gieduc_6",
+    "cat__gieduc_7",
+    "cat__gieduc_8",
+    "cat__gisoc_17",
+    "cat__gisoc_25",
+    "cat__gisoc_47",
+    "cat__gisoc_51",
+    "cat__tu12drin_1",
+    "cat__tudramt_3",
+    "cat__tudramt_4",
+    "cat__tudramt_5",
+    "cat__tursmoke_1",
+    "cat__tusmkcgn_M",
+    "num__ahi_total",
+    "num__arousal_index",
+    "num__baseline_hr",
+    "num__gimstat",
+    "num__num_arousals",
+    "num__num_plm",
+    "num__odi3"
+  ],
+  "rule_validation": {
+    "cat__tudramt_1": {
+      "label": "Needs caution",
+      "reason": "No matched rule; requires review."
+    },
+    "num__hrv_sdnn_ms": {
+      "label": "Plausible",
+      "reason": "HRV reflects autonomic balance; plausible recovery marker."
+    },
+    "num__hypopnea_index": {
+      "label": "Needs caution",
+      "reason": "No matched rule; requires review."
+    },
+    "num__num_apnea_hypopnea_events": {
+      "label": "Needs caution",
+      "reason": "No matched rule; requires review."
+    },
+    "num__num_desats": {
+      "label": "Needs caution",
+      "reason": "No matched rule; requires review."
+    },
+    "num__pct_n1": {
+      "label": "Needs caution",
+      "reason": "No matched rule; requires review."
+    },
+    "num__pct_rem": {
+      "label": "Needs caution",
+      "reason": "No matched rule; requires review."
+    },
+    "num__powers_c3_sigma": {
+      "label": "Needs caution",
+      "reason": "No matched rule; requires review."
+    },
+    "num__powers_c4_beta": {
+      "label": "Needs caution",
+      "reason": "No matched rule; requires review."
+    },
+    "num__powers_c4_delta": {
+      "label": "Needs caution",
+      "reason": "No matched rule; requires review."
+    },
+    "num__sleep_latency_min": {
+      "label": "Needs caution",
+      "reason": "No matched rule; requires review."
+    },
+    "num__stage_transition_count": {
+      "label": "Needs caution",
+      "reason": "No matched rule; requires review."
+    },
+    "num__pct_wake": {
+      "label": "Needs caution",
+      "reason": "No matched rule; requires review."
+    },
+    "cat__tudramt_2": {
+      "label": "Needs caution",
+      "reason": "No matched rule; requires review."
+    },
+    "num__sleep_efficiency": {
+      "label": "Needs caution",
+      "reason": "No matched rule; requires review."
+    },
+    "num__tib_min": {
+      "label": "Needs caution",
+      "reason": "No matched rule; requires review."
+    },
+    "num__spo2_t90_frac": {
+      "label": "Plausible",
+      "reason": "Sustained hypoxia (SpO2 < 90%) worsens recovery."
+    },
+    "num__spo2_mean": {
+      "label": "Needs caution",
+      "reason": "No matched rule; requires review."
+    },
+    "num__hrv_rmssd_ms": {
+      "label": "Plausible",
+      "reason": "Lower vagal tone indicates poorer autonomic recovery."
+    },
+    "cat__gieduc_4": {
+      "label": "Needs caution",
+      "reason": "No matched rule; requires review."
+    },
+    "cat__gieduc_3": {
+      "label": "Needs caution",
+      "reason": "No matched rule; requires review."
+    },
+    "cat__gieduc_5": {
+      "label": "Needs caution",
+      "reason": "No matched rule; requires review."
+    },
+    "cat__gieduc_6": {
+      "label": "Needs caution",
+      "reason": "No matched rule; requires review."
+    },
+    "cat__gieduc_7": {
+      "label": "Needs caution",
+      "reason": "No matched rule; requires review."
+    },
+    "cat__gieduc_8": {
+      "label": "Needs caution",
+      "reason": "No matched rule; requires review."
+    },
+    "cat__gisoc_17": {
+      "label": "Needs caution",
+      "reason": "No matched rule; requires review."
+    },
+    "cat__gisoc_25": {
+      "label": "Needs caution",
+      "reason": "No matched rule; requires review."
+    },
+    "cat__gisoc_47": {
+      "label": "Needs caution",
+      "reason": "No matched rule; requires review."
+    },
+    "cat__gisoc_51": {
+      "label": "Needs caution",
+      "reason": "No matched rule; requires review."
+    },
+    "cat__tu12drin_1": {
+      "label": "Needs caution",
+      "reason": "No matched rule; requires review."
+    },
+    "cat__tudramt_3": {
+      "label": "Needs caution",
+      "reason": "No matched rule; requires review."
+    },
+    "cat__tudramt_4": {
+      "label": "Needs caution",
+      "reason": "No matched rule; requires review."
+    },
+    "cat__tudramt_5": {
+      "label": "Needs caution",
+      "reason": "No matched rule; requires review."
+    },
+    "cat__tursmoke_1": {
+      "label": "Needs caution",
+      "reason": "No matched rule; requires review."
+    },
+    "cat__tusmkcgn_M": {
+      "label": "Needs caution",
+      "reason": "No matched rule; requires review."
+    },
+    "num__ahi_total": {
+      "label": "Plausible",
+      "reason": "OSA severity increases sleepiness via hypoxia and arousals."
+    },
+    "num__arousal_index": {
+      "label": "Needs caution",
+      "reason": "No matched rule; requires review."
+    },
+    "num__baseline_hr": {
+      "label": "Needs caution",
+      "reason": "No matched rule; requires review."
+    },
+    "num__gimstat": {
+      "label": "Needs caution",
+      "reason": "No matched rule; requires review."
+    },
+    "num__num_arousals": {
+      "label": "Needs caution",
+      "reason": "No matched rule; requires review."
+    },
+    "num__num_plm": {
+      "label": "Needs caution",
+      "reason": "No matched rule; requires review."
+    },
+    "num__odi3": {
+      "label": "Plausible",
+      "reason": "Oxygen desaturation burden correlates with sleepiness."
+    }
+  },
+  "llm_validation": {
+    "cat__tudramt_1": {
+      "label": "Plausible",
+      "reason": "Alcohol use can fragment sleep, worsen upper-airway collapsibility, and increase next-day sleepiness via poorer sleep quality and hypoxemia."
+    },
+    "num__hrv_sdnn_ms": {
+      "label": "Plausible",
+      "reason": "Lower HRV (SDNN) can reflect autonomic dysregulation and sleep disruption (e.g., OSA, arousals) that plausibly contributes to daytime sleepiness."
+    },
+    "num__hypopnea_index": {
+      "label": "Plausible",
+      "reason": "More hypopneas increase sleep fragmentation and intermittent hypoxemia, both of which can drive excessive daytime sleepiness."
+    },
+    "num__num_apnea_hypopnea_events": {
+      "label": "Plausible",
+      "reason": "A higher burden of respiratory events can reduce restorative sleep and increase sleepiness through arousals and oxygen desaturation."
+    },
+    "num__num_desats": {
+      "label": "Plausible",
+      "reason": "Frequent oxygen desaturations indicate intermittent hypoxemia, which is linked to impaired alertness and increased daytime sleepiness."
+    },
+    "num__pct_n1": {
+      "label": "Plausible",
+      "reason": "Higher N1 proportion often reflects lighter, more fragmented sleep, which can reduce restorative sleep and increase sleepiness."
+    },
+    "num__pct_rem": {
+      "label": "Plausible",
+      "reason": "Altered REM proportion can reflect sleep disruption or restriction; reduced REM or REM fragmentation may contribute to daytime sleepiness."
+    },
+    "num__powers_c3_sigma": {
+      "label": "Plausible",
+      "reason": "Sigma power relates to sleep spindles and sleep stability; reduced spindle activity can indicate poorer sleep quality associated with sleepiness."
+    },
+    "num__powers_c4_beta": {
+      "label": "Plausible",
+      "reason": "Elevated beta power during sleep can reflect cortical arousal/hyperarousal and fragmented sleep, plausibly increasing daytime sleepiness."
+    },
+    "num__powers_c4_delta": {
+      "label": "Plausible",
+      "reason": "Delta power indexes slow-wave activity; lower delta can indicate reduced deep restorative sleep, which can increase sleepiness."
+    },
+    "num__sleep_latency_min": {
+      "label": "Plausible",
+      "reason": "Short sleep latency can reflect high sleep pressure and sleepiness, while long latency can reflect insomnia-related poor sleep; either can relate to daytime sleepiness."
+    },
+    "num__stage_transition_count": {
+      "label": "Plausible",
+      "reason": "More stage transitions indicate sleep instability/fragmentation, which can reduce restorative sleep and increase sleepiness."
+    },
+    "num__pct_wake": {
+      "label": "Plausible",
+      "reason": "More wake during the sleep period reflects fragmented/insufficient sleep, a direct pathway to increased daytime sleepiness."
+    },
+    "cat__tudramt_2": {
+      "label": "Plausible",
+      "reason": "Alcohol consumption patterns can worsen sleep continuity and breathing during sleep, plausibly increasing daytime sleepiness."
+    },
+    "num__sleep_efficiency": {
+      "label": "Plausible",
+      "reason": "Lower sleep efficiency indicates more wakefulness and poorer consolidated sleep, which can increase daytime sleepiness."
+    },
+    "num__tib_min": {
+      "label": "Plausible",
+      "reason": "Time in bed can proxy sleep opportunity and behavior; insufficient opportunity can cause sleep restriction and sleepiness, while excessive TIB may reflect underlying illness or hypersomnolence."
+    },
+    "num__spo2_t90_frac": {
+      "label": "Plausible",
+      "reason": "Greater time spent below 90% oxygen saturation reflects sustained nocturnal hypoxemia, which is associated with impaired vigilance and sleepiness."
+    },
+    "num__spo2_mean": {
+      "label": "Plausible",
+      "reason": "Lower mean nocturnal oxygenation suggests hypoxemia burden that can contribute to neurocognitive impairment and daytime sleepiness."
+    },
+    "num__hrv_rmssd_ms": {
+      "label": "Plausible",
+      "reason": "RMSSD reflects parasympathetic activity; altered values can indicate sleep disruption or cardiopulmonary stress linked to sleepiness."
+    },
+    "cat__gieduc_4": {
+      "label": "Needs caution",
+      "reason": "Education is a socioeconomic structural variable that can confound associations via health behaviors, work schedules, and access to care rather than a direct physiological pathway."
+    },
+    "cat__gieduc_3": {
+      "label": "Needs caution",
+      "reason": "Education level may proxy socioeconomic position and correlate with sleep opportunity, comorbidities, and reporting, creating confounding."
+    },
+    "cat__gieduc_5": {
+      "label": "Needs caution",
+      "reason": "Education is a structural covariate likely related to multiple upstream determinants of sleepiness (occupation, health, lifestyle), so causal interpretation needs care."
+    },
+    "cat__gieduc_6": {
+      "label": "Needs caution",
+      "reason": "Education can influence sleepiness indirectly through socioeconomic pathways and is prone to confounding with health and work factors."
+    },
+    "cat__gieduc_7": {
+      "label": "Needs caution",
+      "reason": "Education is not a direct physiological exposure; it may confound or modify associations through correlated behaviors and environments."
+    },
+    "cat__gieduc_8": {
+      "label": "Needs caution",
+      "reason": "Education is a structural determinant associated with many upstream factors affecting sleep and sleepiness, making it a potential confounder."
+    },
+    "cat__gisoc_17": {
+      "label": "Needs caution",
+      "reason": "This appears to be a socioeconomic/occupation category, which can confound sleepiness via work hours, shift work, stress, and health behaviors."
+    },
+    "cat__gisoc_25": {
+      "label": "Needs caution",
+      "reason": "Socio-occupational category is a structural covariate likely correlated with sleep opportunity and comorbidities, so associations may be confounded."
+    },
+    "cat__gisoc_47": {
+      "label": "Needs caution",
+      "reason": "Occupation/social class can affect sleepiness through shift work, physical demands, and stress, and is also correlated with many confounders."
+    },
+    "cat__gisoc_51": {
+      "label": "Needs caution",
+      "reason": "Socioeconomic/occupational grouping is a broad upstream determinant and may introduce confounding rather than representing a direct causal mechanism."
+    },
+    "cat__tu12drin_1": {
+      "label": "Plausible",
+      "reason": "Recent alcohol intake can acutely disrupt sleep architecture and worsen sleep-disordered breathing, plausibly increasing next-day sleepiness."
+    },
+    "cat__tudramt_3": {
+      "label": "Plausible",
+      "reason": "Alcohol dose/frequency can influence sleep fragmentation and respiratory instability, contributing to daytime sleepiness."
+    },
+    "cat__tudramt_4": {
+      "label": "Plausible",
+      "reason": "Heavier alcohol use can reduce sleep quality and increase nocturnal hypoxemia, plausibly increasing daytime sleepiness."
+    },
+    "cat__tudramt_5": {
+      "label": "Plausible",
+      "reason": "Alcohol exposure can impair sleep continuity and deepen sleep-disordered breathing, leading to increased daytime sleepiness."
+    },
+    "cat__tursmoke_1": {
+      "label": "Plausible",
+      "reason": "Smoking can increase upper-airway inflammation and is associated with sleep fragmentation and sleep-disordered breathing, which can increase sleepiness."
+    },
+    "cat__tusmkcgn_M": {
+      "label": "Plausible",
+      "reason": "Cigarette consumption intensity can worsen airway inflammation and cardiopulmonary function, plausibly contributing to poorer sleep and daytime sleepiness."
+    },
+    "num__ahi_total": {
+      "label": "Plausible",
+      "reason": "Higher AHI indicates more sleep apnea severity, which increases arousals and hypoxemia and is a well-established cause of daytime sleepiness."
+    },
+    "num__arousal_index": {
+      "label": "Plausible",
+      "reason": "More frequent arousals fragment sleep and reduce restorative sleep, directly increasing daytime sleepiness."
+    },
+    "num__baseline_hr": {
+      "label": "Plausible",
+      "reason": "Higher resting/baseline heart rate can reflect sympathetic activation from poor sleep or sleep apnea, which may be linked to sleepiness through disrupted sleep physiology."
+    },
+    "num__gimstat": {
+      "label": "Needs caution",
+      "reason": "Without clear definition, this likely reflects general health/marital/medical status and may act as a proxy for multiple confounders rather than a direct causal exposure."
+    },
+    "num__num_arousals": {
+      "label": "Plausible",
+      "reason": "A greater number of arousals indicates sleep fragmentation, which reduces sleep quality and increases daytime sleepiness."
+    },
+    "num__num_plm": {
+      "label": "Plausible",
+      "reason": "Periodic limb movements can cause micro-arousals and fragmented sleep, plausibly increasing daytime sleepiness."
+    },
+    "num__odi3": {
+      "label": "Plausible",
+      "reason": "A higher 3% oxygen desaturation index reflects intermittent hypoxemia burden, which is associated with impaired alertness and increased sleepiness."
+    }
+  },
+  "meta": {
+    "openai_model": "gpt-5.2"
+  }
+}

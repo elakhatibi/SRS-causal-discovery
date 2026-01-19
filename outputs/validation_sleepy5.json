@@ -1,0 +1,364 @@
+{
+  "outcome": "sleepy5",
+  "n_candidates": 39,
+  "candidates": [
+    "cat__race1c_2.0",
+    "num__DesaturationIndex",
+    "num__MeanHR_bpm",
+    "num__MeanRR_ms",
+    "num__MeanSpO2",
+    "num__MinSpO2",
+    "num__WASO_min",
+    "num__bmi5c",
+    "num__extrahrs5",
+    "num__pNN50_pct",
+    "num__SWA_Decline_Ratio",
+    "num__AwakeningIndex",
+    "num__TST_min",
+    "num__SDNN_ms",
+    "num__ArousalIndex",
+    "cat__wrksched5_2.0",
+    "num__SOL_min",
+    "cat__wrksched5_4.0",
+    "num__AHI",
+    "num__SWA_NREM",
+    "cat__gender1_1.0",
+    "cat__race1c_3.0",
+    "cat__race1c_4.0",
+    "cat__smkstat5_1.0",
+    "cat__smkstat5_3.0",
+    "cat__types5_2.0",
+    "cat__types5_3.0",
+    "cat__types5_4.0",
+    "cat__types5_5.0",
+    "cat__wrksched5_5.0",
+    "cat__wrksched5_7.0",
+    "num__HypopneaIndex",
+    "num__N1_pct",
+    "num__N2_pct",
+    "num__N3_pct",
+    "num__ObstructiveApneaIndex",
+    "num__REM_pct",
+    "num__RMSSD_ms",
+    "num__SWA_Early"
+  ],
+  "rule_validation": {
+    "cat__race1c_2.0": {
+      "label": "Needs caution",
+      "reason": "Structural variable; may reflect confounding/heterogeneity, not mechanistic."
+    },
+    "num__DesaturationIndex": {
+      "label": "Plausible",
+      "reason": "Oxygen desaturations impair restorative sleep."
+    },
+    "num__MeanHR_bpm": {
+      "label": "Plausible",
+      "reason": "Higher nocturnal HR can reflect sympathetic activation/stress."
+    },
+    "num__MeanRR_ms": {
+      "label": "Plausible",
+      "reason": "RR relates to HR/autonomic tone; interpret with HRV."
+    },
+    "num__MeanSpO2": {
+      "label": "Plausible",
+      "reason": "Lower mean oxygenation reflects hypoxic burden."
+    },
+    "num__MinSpO2": {
+      "label": "Plausible",
+      "reason": "Lower minimum oxygenation reflects hypoxic burden."
+    },
+    "num__WASO_min": {
+      "label": "Plausible",
+      "reason": "Wake after sleep onset reflects poor sleep maintenance."
+    },
+    "num__bmi5c": {
+      "label": "Plausible",
+      "reason": "BMI increases OSA risk and cardiometabolic stress."
+    },
+    "num__extrahrs5": {
+      "label": "Plausible",
+      "reason": "Extra work hours proxy sleep restriction/stress."
+    },
+    "num__pNN50_pct": {
+      "label": "Needs caution",
+      "reason": "No matched rule; requires review."
+    },
+    "num__SWA_Decline_Ratio": {
+      "label": "Plausible",
+      "reason": "Slow-wave activity reflects homeostatic recovery."
+    },
+    "num__AwakeningIndex": {
+      "label": "Plausible",
+      "reason": "Night awakenings reduce sleep continuity."
+    },
+    "num__TST_min": {
+      "label": "Plausible",
+      "reason": "Short total sleep time increases sleepiness."
+    },
+    "num__SDNN_ms": {
+      "label": "Plausible",
+      "reason": "HRV reflects autonomic balance; plausible recovery marker."
+    },
+    "num__ArousalIndex": {
+      "label": "Plausible",
+      "reason": "Frequent arousals fragment sleep and worsen recovery."
+    },
+    "cat__wrksched5_2.0": {
+      "label": "Plausible",
+      "reason": "Shift work disrupts circadian rhythm \u2192 sleepiness."
+    },
+    "num__SOL_min": {
+      "label": "Plausible",
+      "reason": "Longer sleep onset latency suggests insomnia \u2192 worse recovery."
+    },
+    "cat__wrksched5_4.0": {
+      "label": "Plausible",
+      "reason": "Shift work disrupts circadian rhythm \u2192 sleepiness."
+    },
+    "num__AHI": {
+      "label": "Plausible",
+      "reason": "OSA severity increases sleepiness via hypoxia and arousals."
+    },
+    "num__SWA_NREM": {
+      "label": "Plausible",
+      "reason": "Slow-wave activity reflects homeostatic recovery."
+    },
+    "cat__gender1_1.0": {
+      "label": "Needs caution",
+      "reason": "Sex/gender differences may reflect confounding/heterogeneity."
+    },
+    "cat__race1c_3.0": {
+      "label": "Needs caution",
+      "reason": "Structural variable; may reflect confounding/heterogeneity, not mechanistic."
+    },
+    "cat__race1c_4.0": {
+      "label": "Needs caution",
+      "reason": "Structural variable; may reflect confounding/heterogeneity, not mechanistic."
+    },
+    "cat__smkstat5_1.0": {
+      "label": "Needs caution",
+      "reason": "No matched rule; requires review."
+    },
+    "cat__smkstat5_3.0": {
+      "label": "Needs caution",
+      "reason": "No matched rule; requires review."
+    },
+    "cat__types5_2.0": {
+      "label": "Needs caution",
+      "reason": "No matched rule; requires review."
+    },
+    "cat__types5_3.0": {
+      "label": "Needs caution",
+      "reason": "No matched rule; requires review."
+    },
+    "cat__types5_4.0": {
+      "label": "Needs caution",
+      "reason": "No matched rule; requires review."
+    },
+    "cat__types5_5.0": {
+      "label": "Needs caution",
+      "reason": "No matched rule; requires review."
+    },
+    "cat__wrksched5_5.0": {
+      "label": "Plausible",
+      "reason": "Shift work disrupts circadian rhythm \u2192 sleepiness."
+    },
+    "cat__wrksched5_7.0": {
+      "label": "Plausible",
+      "reason": "Shift work disrupts circadian rhythm \u2192 sleepiness."
+    },
+    "num__HypopneaIndex": {
+      "label": "Plausible",
+      "reason": "Hypopneas contribute to desaturation/arousals."
+    },
+    "num__N1_pct": {
+      "label": "Plausible",
+      "reason": "Higher light sleep often reflects poorer quality/fragmentation."
+    },
+    "num__N2_pct": {
+      "label": "Needs caution",
+      "reason": "No matched rule; requires review."
+    },
+    "num__N3_pct": {
+      "label": "Plausible",
+      "reason": "Reduced deep sleep weakens physiological restoration."
+    },
+    "num__ObstructiveApneaIndex": {
+      "label": "Plausible",
+      "reason": "Obstructive apneas cause hypoxia and fragmentation."
+    },
+    "num__REM_pct": {
+      "label": "Plausible",
+      "reason": "Reduced REM can affect cognitive/emotional recovery."
+    },
+    "num__RMSSD_ms": {
+      "label": "Plausible",
+      "reason": "Lower vagal tone indicates poorer autonomic recovery."
+    },
+    "num__SWA_Early": {
+      "label": "Plausible",
+      "reason": "Slow-wave activity reflects homeostatic recovery."
+    }
+  },
+  "llm_validation": {
+    "cat__race1c_2.0": {
+      "label": "Needs caution",
+      "reason": "Race is a structural/social covariate that can proxy for many upstream determinants (SES, environment, healthcare access) and may confound associations with sleepiness."
+    },
+    "num__DesaturationIndex": {
+      "label": "Plausible",
+      "reason": "More frequent oxygen desaturations reflect sleep-disordered breathing severity and intermittent hypoxia, which can fragment sleep and increase daytime sleepiness."
+    },
+    "num__MeanHR_bpm": {
+      "label": "Plausible",
+      "reason": "Higher nocturnal heart rate can reflect sympathetic activation from arousals, hypoxia, or stress, which may relate to nonrestorative sleep and sleepiness."
+    },
+    "num__MeanRR_ms": {
+      "label": "Plausible",
+      "reason": "Mean RR (inverse of heart rate) reflects autonomic tone during sleep; altered autonomic balance from arousals or hypoxia can be linked to poorer sleep quality and sleepiness."
+    },
+    "num__MeanSpO2": {
+      "label": "Plausible",
+      "reason": "Lower average nocturnal oxygenation suggests hypoxemia (often from sleep apnea or lung disease) that can impair sleep quality and contribute to daytime sleepiness."
+    },
+    "num__MinSpO2": {
+      "label": "Plausible",
+      "reason": "Lower nadir oxygen saturation indicates more severe hypoxic events, which can drive arousals and neurocognitive fatigue manifesting as sleepiness."
+    },
+    "num__WASO_min": {
+      "label": "Plausible",
+      "reason": "More wake after sleep onset indicates sleep fragmentation and reduced sleep continuity, a direct pathway to increased daytime sleepiness."
+    },
+    "num__bmi5c": {
+      "label": "Needs caution",
+      "reason": "BMI is a strong upstream risk factor for sleep apnea and other conditions affecting sleepiness, but it also correlates with comorbidities and lifestyle factors that can confound effects."
+    },
+    "num__extrahrs5": {
+      "label": "Plausible",
+      "reason": "Extra hours (e.g., overtime/extended work) can reduce sleep opportunity and increase sleep debt, leading to greater daytime sleepiness."
+    },
+    "num__pNN50_pct": {
+      "label": "Plausible",
+      "reason": "pNN50 reflects parasympathetic activity/HRV; reduced vagal tone can indicate stress, arousals, or poor sleep physiology associated with sleepiness."
+    },
+    "num__SWA_Decline_Ratio": {
+      "label": "Plausible",
+      "reason": "Abnormal slow-wave activity decline across the night can reflect impaired sleep homeostasis or disrupted deep sleep, which may increase subjective sleepiness."
+    },
+    "num__AwakeningIndex": {
+      "label": "Plausible",
+      "reason": "More awakenings per hour indicate fragmented sleep, which commonly produces excessive daytime sleepiness."
+    },
+    "num__TST_min": {
+      "label": "Plausible",
+      "reason": "Shorter total sleep time increases homeostatic sleep pressure and is a well-established cause of daytime sleepiness."
+    },
+    "num__SDNN_ms": {
+      "label": "Plausible",
+      "reason": "SDNN is overall HRV; lower values can reflect autonomic dysregulation from stress, hypoxia, or fragmented sleep that may relate to sleepiness."
+    },
+    "num__ArousalIndex": {
+      "label": "Plausible",
+      "reason": "Higher arousal frequency fragments sleep architecture and reduces restorative sleep, increasing daytime sleepiness."
+    },
+    "cat__wrksched5_2.0": {
+      "label": "Plausible",
+      "reason": "Work schedule category can capture shift work or irregular timing that misaligns circadian rhythms and increases sleepiness."
+    },
+    "num__SOL_min": {
+      "label": "Plausible",
+      "reason": "Longer sleep onset latency can indicate insomnia or circadian misalignment, reducing effective sleep and contributing to daytime sleepiness."
+    },
+    "cat__wrksched5_4.0": {
+      "label": "Plausible",
+      "reason": "Work schedule category may reflect nonstandard hours that disrupt circadian alignment and sleep duration, increasing sleepiness risk."
+    },
+    "num__AHI": {
+      "label": "Plausible",
+      "reason": "Higher apnea-hypopnea index indicates more severe sleep-disordered breathing, which causes arousals/hypoxia and commonly leads to excessive daytime sleepiness."
+    },
+    "num__SWA_NREM": {
+      "label": "Plausible",
+      "reason": "Slow-wave activity during NREM reflects deep sleep intensity and homeostatic recovery; reduced SWA can be associated with nonrestorative sleep and sleepiness."
+    },
+    "cat__gender1_1.0": {
+      "label": "Needs caution",
+      "reason": "Gender is a structural covariate associated with differences in sleep apnea risk, reporting, hormones, and social factors, so it can confound many relationships."
+    },
+    "cat__race1c_3.0": {
+      "label": "Needs caution",
+      "reason": "Race is a structural/social covariate that can proxy for upstream determinants and confounding pathways affecting both sleep physiology and reported sleepiness."
+    },
+    "cat__race1c_4.0": {
+      "label": "Needs caution",
+      "reason": "Race is a structural/social covariate and may reflect systemic differences in exposures and healthcare that confound associations with sleepiness."
+    },
+    "cat__smkstat5_1.0": {
+      "label": "Plausible",
+      "reason": "Smoking status can affect sleep via nicotine stimulation/withdrawal, airway inflammation, and comorbid respiratory disease, influencing daytime sleepiness."
+    },
+    "cat__smkstat5_3.0": {
+      "label": "Plausible",
+      "reason": "Smoking status can plausibly impact sleep quality and breathing during sleep, which can translate into greater daytime sleepiness."
+    },
+    "cat__types5_2.0": {
+      "label": "Plausible",
+      "reason": "Sleep-related 'type' categories (e.g., chronotype or sleep pattern) can influence circadian alignment and sleep timing, affecting daytime sleepiness."
+    },
+    "cat__types5_3.0": {
+      "label": "Plausible",
+      "reason": "Sleep pattern/chronotype categories can alter sleep timing and circadian misalignment, which can increase subjective sleepiness."
+    },
+    "cat__types5_4.0": {
+      "label": "Plausible",
+      "reason": "Sleep pattern/chronotype categories can affect sleep opportunity and circadian alignment, providing a pathway to daytime sleepiness."
+    },
+    "cat__types5_5.0": {
+      "label": "Plausible",
+      "reason": "Sleep pattern/chronotype categories may capture circadian preference or sleep timing differences that influence sleepiness."
+    },
+    "cat__wrksched5_5.0": {
+      "label": "Plausible",
+      "reason": "Nonstandard work schedules can reduce sleep duration and disrupt circadian rhythms, increasing daytime sleepiness."
+    },
+    "cat__wrksched5_7.0": {
+      "label": "Plausible",
+      "reason": "Work schedule category may indicate irregular/shift work exposure, a known contributor to circadian misalignment and sleepiness."
+    },
+    "num__HypopneaIndex": {
+      "label": "Plausible",
+      "reason": "More hypopneas increase sleep fragmentation and intermittent hypoxia, both of which can elevate daytime sleepiness."
+    },
+    "num__N1_pct": {
+      "label": "Plausible",
+      "reason": "Higher N1 percentage indicates lighter, more fragmented sleep and reduced restorative depth, which can contribute to sleepiness."
+    },
+    "num__N2_pct": {
+      "label": "Plausible",
+      "reason": "Shifts in N2 proportion can reflect altered sleep architecture and fragmentation; less restorative balance may relate to increased sleepiness."
+    },
+    "num__N3_pct": {
+      "label": "Plausible",
+      "reason": "Lower N3 (slow-wave sleep) reduces restorative deep sleep and can increase daytime sleepiness."
+    },
+    "num__ObstructiveApneaIndex": {
+      "label": "Plausible",
+      "reason": "More obstructive apneas cause repeated arousals and hypoxemia, leading to nonrestorative sleep and daytime sleepiness."
+    },
+    "num__REM_pct": {
+      "label": "Plausible",
+      "reason": "Altered REM proportion can reflect sleep fragmentation or circadian disruption; REM suppression or instability may be associated with daytime sleepiness."
+    },
+    "num__RMSSD_ms": {
+      "label": "Plausible",
+      "reason": "RMSSD reflects short-term vagal activity; reduced values can indicate autonomic arousal/stress or fragmented sleep physiology linked to sleepiness."
+    },
+    "num__SWA_Early": {
+      "label": "Plausible",
+      "reason": "Early-night slow-wave activity reflects homeostatic sleep pressure and deep sleep intensity; reduced early SWA may indicate impaired restorative sleep and greater sleepiness."
+    }
+  },
+  "meta": {
+    "openai_model": "gpt-5.2"
+  }
+}

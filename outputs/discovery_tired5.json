@@ -1,0 +1,234 @@
+{
+  "outcome": "tired5",
+  "outcome_node": "num__OUTCOME",
+  "direct": [
+    "cat__gender1_1.0",
+    "cat__types5_2.0",
+    "cat__types5_3.0",
+    "cat__types5_4.0",
+    "num__REM_pct",
+    "num__extrahrs5",
+    "num__sleepage5c"
+  ],
+  "indirect": [
+    "cat__race1c_2.0",
+    "cat__race1c_3.0",
+    "cat__race1c_4.0",
+    "cat__smkstat5_1.0",
+    "cat__smkstat5_3.0",
+    "cat__types5_5.0",
+    "cat__wrksched5_5.0",
+    "cat__wrksched5_7.0",
+    "num__AHI",
+    "num__ArousalIndex",
+    "num__AwakeningIndex",
+    "num__DesaturationIndex",
+    "num__HypopneaIndex",
+    "num__MeanHR_bpm",
+    "num__MeanRR_ms",
+    "num__MeanSpO2",
+    "num__N1_pct",
+    "num__N2_pct",
+    "num__N3_pct",
+    "num__ObstructiveApneaIndex",
+    "num__RMSSD_ms",
+    "num__SDNN_ms",
+    "num__SOL_min",
+    "num__SWA_Decline_Ratio",
+    "num__SWA_Early",
+    "num__SWA_Late",
+    "num__SWA_NREM",
+    "num__Sigma_NREM",
+    "num__SleepEfficiency_pct",
+    "num__StageShiftIndex",
+    "num__T90_pct",
+    "num__TST_min",
+    "num__WASO_min"
+  ],
+  "top_incoming": [
+    [
+      "cat__types5_4.0",
+      -0.26333294126625734
+    ],
+    [
+      "cat__types5_3.0",
+      -0.2031658095879693
+    ],
+    [
+      "cat__gender1_1.0",
+      0.1740047105203947
+    ],
+    [
+      "num__sleepage5c",
+      0.07827298388652325
+    ],
+    [
+      "cat__types5_2.0",
+      -0.062200385346221805
+    ],
+    [
+      "num__REM_pct",
+      0.04833310803741859
+    ],
+    [
+      "num__extrahrs5",
+      -0.01124455178163165
+    ],
+    [
+      "num__bmi5c",
+      -0.005195966212082811
+    ],
+    [
+      "num__SWA_Late",
+      0.004471140116010782
+    ],
+    [
+      "num__pNN50_pct",
+      -0.0038004445569408
+    ],
+    [
+      "num__RMSSD_ms",
+      -0.0009063842308855961
+    ],
+    [
+      "num__DesaturationIndex",
+      -0.0008847004083939519
+    ],
+    [
+      "num__MeanRR_ms",
+      0.00016130212666069094
+    ],
+    [
+      "num__MeanSpO2",
+      -9.756194068693073e-05
+    ],
+    [
+      "cat__wrksched5_5.0",
+      6.580401416351583e-05
+    ],
+    [
+      "num__MeanHR_bpm",
+      -5.2700795680853806e-05
+    ],
+    [
+      "num__T90_pct",
+      3.085068951264924e-05
+    ],
+    [
+      "num__HypopneaIndex",
+      2.6011600327689248e-05
+    ],
+    [
+      "cat__wrksched5_3.0",
+      1.3460715432121856e-05
+    ],
+    [
+      "num__TST_min",
+      1.2186277838689655e-05
+    ]
+  ],
+  "extras": {
+    "args": {
+      "csv": "Dataset/mesa_SRS_master.csv",
+      "outcome": "tired5",
+      "algo": "notears",
+      "ci_test": "fisherz",
+      "alpha": 0.01,
+      "lambda1": 0.02,
+      "thr": 0.01,
+      "topk": 20,
+      "max_rows": 0,
+      "max_depth": 2,
+      "ges_score": "bic",
+      "ges_timeout_sec": 60,
+      "fci_mode": "possible",
+      "export_json": "outputs/discovery_tired5.json"
+    },
+    "notears": {
+      "thr": 0.01,
+      "lambda1": 0.02,
+      "top_incoming": [
+        [
+          "cat__types5_4.0",
+          -0.26333294126625734
+        ],
+        [
+          "cat__types5_3.0",
+          -0.2031658095879693
+        ],
+        [
+          "cat__gender1_1.0",
+          0.1740047105203947
+        ],
+        [
+          "num__sleepage5c",
+          0.07827298388652325
+        ],
+        [
+          "cat__types5_2.0",
+          -0.062200385346221805
+        ],
+        [
+          "num__REM_pct",
+          0.04833310803741859
+        ],
+        [
+          "num__extrahrs5",
+          -0.01124455178163165
+        ],
+        [
+          "num__bmi5c",
+          -0.005195966212082811
+        ],
+        [
+          "num__SWA_Late",
+          0.004471140116010782
+        ],
+        [
+          "num__pNN50_pct",
+          -0.0038004445569408
+        ],
+        [
+          "num__RMSSD_ms",
+          -0.0009063842308855961
+        ],
+        [
+          "num__DesaturationIndex",
+          -0.0008847004083939519
+        ],
+        [
+          "num__MeanRR_ms",
+          0.00016130212666069094
+        ],
+        [
+          "num__MeanSpO2",
+          -9.756194068693073e-05
+        ],
+        [
+          "cat__wrksched5_5.0",
+          6.580401416351583e-05
+        ],
+        [
+          "num__MeanHR_bpm",
+          -5.2700795680853806e-05
+        ],
+        [
+          "num__T90_pct",
+          3.085068951264924e-05
+        ],
+        [
+          "num__HypopneaIndex",
+          2.6011600327689248e-05
+        ],
+        [
+          "cat__wrksched5_3.0",
+          1.3460715432121856e-05
+        ],
+        [
+          "num__TST_min",
+          1.2186277838689655e-05
+        ]
+      ]
+    }
+  }
+}
